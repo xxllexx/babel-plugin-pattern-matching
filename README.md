@@ -1,7 +1,7 @@
 babel-plugin-pattern-matching
 =====
 
-**Transform "haskel like" pattern matching.**
+**Transform "haskell like" pattern matching.**
 
 Syntax analyzing based on **bitwise operators like |(OR) and &(AND)**.
  

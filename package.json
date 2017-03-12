@@ -1,7 +1,7 @@
 {
   "name": "babel-plugin-pattern-matching",
   "version": "1.2.0",
-  "description": "Transform 'haskel like' pattern matching. Syntax analyzing based on bitwise operators like |(OR) and &(AND). Transforms to javascript function that comes with plugin as a helpers library.",
+  "description": "Transform 'haskell like' pattern matching. Syntax analyzing based on bitwise operators like |(OR) and &(AND). Transforms to javascript function that comes with plugin as a helpers library.",
   "main": "lib/index.js",
   "author": "xxllexx",
   "scripts": {
