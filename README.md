@@ -12,24 +12,23 @@ Transforms to javascript function that comes with plugin as a helpers library.
 #### Array
 
 ```js
-let pattern = []; //empty array
-    pattern = [x, y]; //array with one or more elements
-    pattern = [x, y, ...ys]; //array with two or more elements
-    pattern = all&[x, y]; //array with two or more elements, resulting function will receive additional argument 'all' equal to whole array
-    pattern = ([x, y, ...ys], [x]); //two arguments as array, where first length >= 2, second >= 1
+[] //empty array
+[x, y] //array with one or more elements
+[x, y, ...ys] //array with two or more elements
+all&[x, y] //array with two or more elements, resulting function will receive additional argument 'all' equal to whole array
+[x, y, ...ys], [x]) //two arguments as array, where first length >= 2, second >= 1
 ```
 
 #### Object
 
 ```js
-let pattern = {}; //empty object
-    pattern = {x, y}; //object with keys 'x' and 'y'
-    pattern = {x:n, y}; //object with keys 'x' and 'y', where x will be renamed to n
-    pattern = {x: {m}, ...rest};
-    //object with keys 'x' which is equal object with key 'm', resulting function will receive additional arg. rest
-    pattern = {x: {m}, y: [x, ...xs]} //object with keys 'x' and 'y' where y is array that has at least one element
-    pattern = ({x}, all&{y}) // two arguments as objects where 1st has x property, second has 'y', 'all' - grouping
-    pattern = ({x: all&{y}}, all2&{t}) //nested grouping   
+{} //empty object
+{x, y} //object with keys 'x' and 'y'
+{x:n, y} //object with keys 'x' and 'y', where x will be renamed to n
+{x: {m}, ...rest} //object with keys 'x' which is equal object with key 'm', resulting function will receive additional arg. rest
+{x: {m}, y: [x, ...xs]} //object with keys 'x' and 'y' where y is array that has at least one element
+({x}, all&{y}) // two arguments as objects where 1st has x property, second has 'y', 'all' - grouping
+({x: all&{y}}, all2&{t}) //nested grouping   
 ```
 
 #### Primitives
@@ -145,7 +144,7 @@ Set plugin options using an array of `[pluginName, optionsObject]`.
 ```
 > **skipLib** - won't add the match-helper code to program
 >
-> **enableByComment** - will transform patterns just when leading comment "@match" will be added
+> **enableByComment** - will transform patterns just when leading by comment "@match" will be added
 ```js
 //@match
 let pattern = [x, y, ...ys]  | 'first pattern'; 
