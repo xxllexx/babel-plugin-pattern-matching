@@ -7,6 +7,28 @@ Syntax analyzing based on **bitwise operators like |(OR) and &(AND)**.
  
 Transforms to javascript function that comes with plugin as a helpers library.
 
+## Example
+
+```js
+//function declaration 
+//let functionName = pattern-1 | function body for leading pattern 
+//    functionName = pattern-2 | function body for leading pattern 
+ 
+let func = []     | "result 0";
+    func = [x, z] | `result ${x + z}`;  
+ 
+//execute
+func([]) //result 0
+func([1, 2]) //result 3
+
+let anotherFunction = {n: x}                   | `result ${x}`;
+    anotherFunction = ({n: x}, all&[y, ...ys]) | `result ${x}, ${all}, ${y}, ${ys}`;
+    
+//execute
+anotherFunction({n: 10}) //result 10
+anotherFunction({n: 10}, [1, 2, 3]) //result 10, [1, 2, 3], 1, [2, 3]
+```
+
 ## Available Patterns
 
 #### Array
@@ -49,16 +71,12 @@ let pattern = n | "one argument";
     pattern = (n, m) | "two arguments"
 ```
 
-## Example
+## Transformation
 
 Pattern
 ```js
 let pattern = [] | "result 0";
     pattern = [x, z] | `result ${x + z}`;   
- 
-//execute
-pattern([]) //result 0
-pattern([1, 2]) //result 3
 ```
 
 Transforms to
@@ -73,10 +91,6 @@ Pattern
 ```js
 let pattern = {n: x} | `result ${x}`;
     pattern = ({n: x}, all&[y, ...ys]) | `result ${x}, ${all}, ${y}, ${ys}`;
-  
-//execute
-pattern({n: 10}) //result 10
-pattern({n: 10}, [1, 2, 3]) //result 10, [1, 2, 3], 1, [2, 3]
 ```
 
 Transforms to
