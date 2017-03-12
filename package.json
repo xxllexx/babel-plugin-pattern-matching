@@ -29,6 +29,7 @@
     "mocha": "^3.2.0"
   },
   "dependencies": {
+    "babel-template": "^6.23.0",
     "glob": "^7.1.1"
   }
 }
