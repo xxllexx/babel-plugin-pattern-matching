@@ -14,19 +14,19 @@ Transforms to javascript function that comes with plugin as a helpers library.
 //let functionName = pattern-1 | function body for leading pattern 
 //    functionName = pattern-2 | function body for leading pattern 
  
-let func = []     | "result 0";
-    func = [x, z] | `result ${x + z}`;  
+let factorial = 0 | 1;
+    factorial = n | n * factorial(n - 1);
+
+//execute
+factorial(3); // 6
+
+let fibonacci = 0 | 1;
+    fibonacci = 1 | 1;
+    fibonacci = num | fibonacci(num - 1) + fibonacci(num - 2); 
  
 //execute
-func([]) //result 0
-func([1, 2]) //result 3
+fibonacci(10); //89
 
-let anotherFunction = {n: x}                   | `result ${x}`;
-    anotherFunction = ({n: x}, all&[y, ...ys]) | `result ${x}, ${all}, ${y}, ${ys}`;
-    
-//execute
-anotherFunction({n: 10}) //result 10
-anotherFunction({n: 10}, [1, 2, 3]) //result 10, [1, 2, 3], 1, [2, 3]
 ```
 
 ## Available Patterns

@@ -9,6 +9,34 @@ const options = {
     'presets': ['es2015']
 };
 
+describe('Examples evaluation', function() {
+    const actualCodeString = `
+            let factorial = 0 | 1;
+                factorial = n | n * factorial(n - 1);
+                
+            let fibonacci = 0 | 1;
+                fibonacci = 1 | 1;
+                fibonacci = num | fibonacci(num - 1) + fibonacci(num - 2);
+        `;
+
+    const actual = transform(actualCodeString, options).code;
+    const resScript = new vm.Script(actual);
+    const context = new vm.createContext({});
+    resScript.runInContext(context);
+
+    const {factorial, fibonacci} = context;
+
+    it('Should calculate factorial of 3', function () {
+        const res = factorial(3);
+        assert.strictEqual(res, 6);
+    });
+
+    it('Should calculate fibonacci of 10', function () {
+        const res = fibonacci(10);
+        assert.strictEqual(res, 89);
+    });
+});
+
 describe('Array patterns evaluation', function() {
     const actualCodeString = `
             let func = [] | 1;

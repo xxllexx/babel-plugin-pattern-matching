@@ -17,6 +17,9 @@ const $$getAllObject = '$$get-all-object';
 const $$args = 'args';
 const $$getArgs = 'getArgs';
 const $$match = 'match';
+const $$leadingComment = '@match';
+const $$enableComment = '@enable-match';
+const $$disableComment = '@disable-match';
 
 function analyzeBinary(path, t) {
     let operator = path.node && path.node.operator || path.operator;
@@ -248,7 +251,7 @@ export default function (babel) {
                 if (
                     state.opts
                     && state.opts.enableByComment
-                    && (!path.node.leadingComments || !path.node.leadingComments.some(l => l.value.includes('@match')))
+                    && (!path.node.leadingComments || !path.node.leadingComments.some(l => l.value.includes($$leadingComment)))
                 ) return;
 
                 let declaration;
