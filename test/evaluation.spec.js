@@ -11,12 +11,16 @@ const options = {
 
 describe('Examples evaluation', function() {
     const actualCodeString = `
+            //@disable-match
+            let disableBy = 0 | 1;
+            
             let factorial = 0 | 1;
                 factorial = n | n * factorial(n - 1);
                 
             let fibonacci = 0 | 1;
                 fibonacci = 1 | 1;
                 fibonacci = num | fibonacci(num - 1) + fibonacci(num - 2);
+                
         `;
 
     const actual = transform(actualCodeString, options).code;
@@ -24,7 +28,7 @@ describe('Examples evaluation', function() {
     const context = new vm.createContext({});
     resScript.runInContext(context);
 
-    const {factorial, fibonacci} = context;
+    const {factorial, fibonacci, disableBy} = context;
 
     it('Should calculate factorial of 3', function () {
         const res = factorial(3);
@@ -34,6 +38,10 @@ describe('Examples evaluation', function() {
     it('Should calculate fibonacci of 10', function () {
         const res = fibonacci(10);
         assert.strictEqual(res, 89);
+    });
+
+    it('Should disable matching', function () {
+        assert.strictEqual(disableBy, 1);
     });
 });
 

@@ -18,7 +18,6 @@ const $$args = 'args';
 const $$getArgs = 'getArgs';
 const $$match = 'match';
 const $$leadingComment = '@match';
-const $$enableComment = '@enable-match';
 const $$disableComment = '@disable-match';
 
 function analyzeBinary(path, t) {
@@ -248,10 +247,16 @@ export default function (babel) {
                 }
             },
             VariableDeclaration(path, state) {
+                const alwaysEnabled = !state.opts || !state.opts.enableByComment;
+
                 if (
-                    state.opts
-                    && state.opts.enableByComment
-                    && (!path.node.leadingComments || !path.node.leadingComments.some(l => l.value.includes($$leadingComment)))
+                    (
+                        !alwaysEnabled
+                        && (!path.node.leadingComments || !path.node.leadingComments.some(l => l.value.includes($$leadingComment)))
+                    ) || (
+                        alwaysEnabled
+                        && (path.node.leadingComments && path.node.leadingComments.length && path.node.leadingComments.some(l => l.value.includes($$disableComment)))
+                    )
                 ) return;
 
                 let declaration;

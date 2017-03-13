@@ -38,7 +38,7 @@ fibonacci(10); //89
 [x, y] //array with one or more elements
 [x, y, ...ys] //array with two or more elements
 all&[x, y] //array with two or more elements, resulting function will receive additional argument 'all' equal to whole array
-[x, y, ...ys], [x]) //two arguments as array, where first length >= 2, second >= 1
+([x, y, ...ys], [x]) //two arguments as array, where first length >= 2, second >= 1
 ```
 
 #### Object
@@ -137,7 +137,11 @@ pattern([1]) //second pattern
 ## Install
 
 ```shell
+npm
 $ npm i --save babel-plugin-pattern-matching
+
+yarn
+$ yarn add babel-plugin-pattern-matching
 ```
 
 ## Usage
@@ -165,3 +169,9 @@ let pattern = [x, y, ...ys]  | 'first pattern';
     pattern = [x] | 'second pattern'; 
 ```
 
+Or you can disable transformation in place by comment **"@disable-match"**
+
+```js
+//@disable-match
+let regularOperation = 1 | 0; //1
+```
