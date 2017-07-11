@@ -39,10 +39,10 @@ function analyzeDeclaration(path) {
 }
 
 const analyzeExpression = path => path.node
-&& path.isExpressionStatement()
-&& path.get('expression')
-&& path.get('expression').isAssignmentExpression()
-&& path.get('expression') || false;
+    && path.isExpressionStatement()
+    && path.get('expression')
+    && path.get('expression').isAssignmentExpression()
+    && path.get('expression') || false;
 
 const getVariableName = declaration => declaration.node.id.name;
 const isRestKey = (block, t) => t.isSpreadProperty(block);
@@ -96,7 +96,9 @@ const typePredicates = {
         if (!block.properties.length) {
             return t.callExpression(t.identifier($$isEmptyObject), []);
         } else {
-            const keysLength = block.properties.some(e => t.isSpreadProperty(e)) ? block.properties.length - 1 : block.properties.length;
+            const keysLength = block.properties.filter(e => {
+                return !t.isSpreadProperty(e) && !t.isNullLiteral(e.value)
+            }).length;
             const keysExpr = t.callExpression(
                 t.identifier($$objKeysLengthIsEqOrAbove),
                 [t.numericLiteral(keysLength)]
@@ -146,8 +148,7 @@ let getTypeParams = {
         block.elements.map((a, i) => {
             return (a != null) ? t.isSpreadElement(a) ? t.stringLiteral($$getRestParams) : t.numericLiteral(i) : false
         }).filter(a=> !!a)
-    )
-        : false,
+    ) : false,
     BinaryExpression: (block, t) => {
         if (block.operator === '&') {
             let res = getTypedParams(block.right.type)(block.right, t);
@@ -156,20 +157,27 @@ let getTypeParams = {
         }
         return null;
     },
-    ObjectProperty: (block, t) => t.isIdentifier(block.value)
-        ? t.stringLiteral(block.key.name)
-        : t.objectExpression([
-        t.objectProperty(
-            t.identifier(block.key.name),
-            getTypedParams(block.value.type)(block.value, t, true)
-        )
-    ]),
+    ObjectProperty: (block, t) => {
+        let rValue;
+        if (t.isIdentifier(block.value)) {
+            rValue = t.stringLiteral(block.key.name);
+        }	else {
+            const val = getTypedParams(block.value.type)(block.value, t, true);
+            rValue = val ? t.objectExpression([
+                t.objectProperty(t.identifier(block.key.name), val)
+            ]) : null
+        }
+        return rValue
+    },
     SpreadProperty: (block, t) => t.stringLiteral($$getRestParams),
-    ObjectExpression: (block, t) => t.arrayExpression(
-        block.properties.length
+    ObjectExpression: (block, t) => {
+        const props = block.properties.length
             ? block.properties.map(p => getTypedParams(p.type)(p, t, true))
-            : []
-    )
+            : [];
+
+        const filtered = props.filter(f => f != void 0);
+        return filtered && filtered.length ? t.arrayExpression(filtered) : false
+    }
 };
 
 function getFunctionsCall(left, right, t) {

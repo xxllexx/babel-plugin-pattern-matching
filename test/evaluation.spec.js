@@ -242,4 +242,40 @@ describe('Mixed patterns evaluation', function() {
         const res = func({test: 123});
         assert.strictEqual(res, 6);
     });
+
+    describe('Object patterns with nested types', function() {
+        const actualCodeString = `
+            let func = {x: [], y: []}   | 1;
+                func = {x: [], y: [t]} | 2;
+                func = {x: []} | 3;
+                func = {x: 2} | 4;
+        `;
+
+        const actual = transform(actualCodeString, options).code;
+        const resScript = new vm.Script(actual);
+        const context = new vm.createContext({});
+        resScript.runInContext(context);
+
+        const {func} = context;
+
+        it('Should run function for pattern `{x: []}`', function () {
+            const res = func({x: []});
+            assert.strictEqual(res, 3);
+        });
+
+        it('Should run function for pattern `{x: [], y: []}`', function () {
+            const res = func({x: [], y: []});
+            assert.strictEqual(res, 1);
+        });
+
+        it('Should run function for pattern `{x: [], y: [t]} `', function () {
+            const res = func({x: [], y: [1]});
+            assert.strictEqual(res, 2);
+        });
+
+        it('Should run function for pattern `{x: 2} `', function () {
+            const res = func({x: 2});
+            assert.strictEqual(res, 4);
+        });
+    });
 });
