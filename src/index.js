@@ -38,6 +38,8 @@ function analyzeDeclaration(path) {
         && declaration || false;
 }
 
+const isUndefined = (block) => block.name === 'undefined';
+
 const analyzeExpression = path => path.node
     && path.isExpressionStatement()
     && path.get('expression')
@@ -77,7 +79,7 @@ const typePredicates = {
     },
     BinaryExpression: (block, t) => (block.operator === '&') ? getTypePredicate(block.right.type)(block.right, t) : null,
     ObjectProperty: (property, block, t) => {
-        if (!t.isIdentifier(block)) {
+        if (!t.isIdentifier(block) || isUndefined(block)) {
             return t.callExpression(
                 t.identifier($$keyPredicate),
                 [
@@ -97,7 +99,9 @@ const typePredicates = {
             return t.callExpression(t.identifier($$isEmptyObject), []);
         } else {
             const keysLength = block.properties.filter(e => {
-                return !t.isSpreadProperty(e) && !t.isNullLiteral(e.value)
+                return !t.isSpreadProperty(e)
+                    && !t.isNullLiteral(e.value)
+                    && !isUndefined(e.value)
             }).length;
             const keysExpr = t.callExpression(
                 t.identifier($$objKeysLengthIsEqOrAbove),
@@ -126,11 +130,25 @@ const typePredicates = {
 };
 
 let typeArguments = {
+    NumericLiteral: (block, t) => t.identifier(block.name),
+    BooleanLiteral: (block, t) => t.identifier(block.name),
+    StringLiteral: (block, t) => t.identifier(block.name),
     Identifier: (block, t) => t.identifier(block.name),
     SpreadElement: (block, t) => t.identifier(block.argument.name),
     SequenceExpression: (block, t) => block.expressions.map(ex => getTypeArguments(ex.type)(ex, t)),
-    ArrayExpression: (block, t) => block.elements.length ? block.elements.map(a => getTypeArguments((a || {type: 'Skip'}).type)(a, t)) : false,
-    BinaryExpression: (block, t) => (block.operator === '&') ? [t.identifier(block.left.name), ...getTypeArguments(block.right.type)(block.right, t)] : null,
+    ArrayExpression: (block, t) => {
+        return block.elements.length ? block.elements.map(a => {
+            let res = getTypeArguments((a || {type: 'Skip'}).type)(a, t);
+            return Array.isArray(res) ? res[0] : res
+        }) : false
+    },
+    BinaryExpression: (block, t) => {
+        if (block.operator === '&') {
+            const res = getTypeArguments(block.right.type)(block.right, t);
+            if (res) return [t.identifier(block.left.name), ...res]
+        }
+        return null
+    },
     ObjectProperty: (block, t) => t.isIdentifier(block.value) ? typeArguments.Identifier(block.value, t) : getTypeArguments(block.value.type)(block.value, t),
     SpreadProperty: (block, t) => typeArguments.Identifier(block.argument, t),
     ObjectExpression: (block, t) => block.properties.length
@@ -142,8 +160,11 @@ let typeArguments = {
 };
 
 let getTypeParams = {
+    BooleanLiteral: (block, t, nested) =>  nested ? t.arrayExpression([]) : null,
+    NumericLiteral: (block, t, nested) =>  nested ? t.arrayExpression([]) : null,
+    StringLiteral: (block, t, nested) =>  nested ? t.arrayExpression([]) : null,
     SequenceExpression: (block, t) => block.expressions.map(ex => getTypedParams(ex.type)(ex, t)),
-    ArrayExpression: (block, t, property) => block.elements.length
+    ArrayExpression: (block, t, nested) => block.elements.length
         ? t.arrayExpression(
         block.elements.map((a, i) => {
             return (a != null) ? t.isSpreadElement(a) ? t.stringLiteral($$getRestParams) : t.numericLiteral(i) : false
@@ -151,8 +172,8 @@ let getTypeParams = {
     ) : false,
     BinaryExpression: (block, t) => {
         if (block.operator === '&') {
-            let res = getTypedParams(block.right.type)(block.right, t);
-            res.elements = [t.stringLiteral($$getAllObject), ...res.elements];
+            let res = getTypedParams(block.right.type)(block.right, t, true);
+            if (res.elements) res.elements = [t.stringLiteral($$getAllObject), ...res.elements];
             return res;
         }
         return null;
@@ -160,7 +181,7 @@ let getTypeParams = {
     ObjectProperty: (block, t) => {
         let rValue;
         if (t.isIdentifier(block.value)) {
-            rValue = t.stringLiteral(block.key.name);
+            rValue = !isUndefined(block.value) ? t.stringLiteral(block.key.name) : null;
         }	else {
             const val = getTypedParams(block.value.type)(block.value, t, true);
             rValue = val ? t.objectExpression([
@@ -194,7 +215,7 @@ function getFunctionsCall(left, right, t) {
 
     if (!left.name || left.name !== 'NaN' && left.name !== 'undefined') {
         params = args.filter(a => !!a).reduce((acc, n) => {
-            return [...acc, ...(Array.isArray(n) ? n.filter(a => !!a) : [n])]
+            return [...acc, ...(Array.isArray(n) ? n.filter(a => !!a && !isUndefined(a) && a.name) : n.name ? [n] : [])]
         }, []);
     }
 

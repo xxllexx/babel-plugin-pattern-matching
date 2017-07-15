@@ -249,6 +249,10 @@ describe('Mixed patterns evaluation', function() {
                 func = {x: [], y: [t]} | 2;
                 func = {x: []} | 3;
                 func = {x: 2} | 4;
+                func = {v: undefined, c} | 5;
+                func = {v: null, c} | 6;
+                func = {v: 5, c} | 7;
+                func = {v: 'a', c} | 8;
         `;
 
         const actual = transform(actualCodeString, options).code;
@@ -276,6 +280,67 @@ describe('Mixed patterns evaluation', function() {
         it('Should run function for pattern `{x: 2} `', function () {
             const res = func({x: 2});
             assert.strictEqual(res, 4);
+        });
+
+        it('Should run function for pattern `{v: undefined, c} `', function () {
+            const res = func({c: 10});
+            assert.strictEqual(res, 5);
+        });
+
+        it('Should run function for pattern `{v: null, c} `', function () {
+            const res = func({v: null, c: 10});
+            assert.strictEqual(res, 6);
+        });
+
+        it('Should run function for pattern `{v: 5, c} `', function () {
+            const res = func({v: 5, c: 10});
+            assert.strictEqual(res, 7);
+        });
+
+        it('Should run function for pattern `{v: "a", c} `', function () {
+            const res = func({v: 'a', c: 10});
+            assert.strictEqual(res, 8);
+        });
+    });
+    describe('Object patterns with alias for primitive values', function() {
+        const actualCodeString = `
+            let func = {x: p&'r'}   | 1;
+                func = {x: p&{}, m: t&11} | t + 1;
+                func = {x: p&{}, m: t} | t;
+                func = {x: p&{}, m: t&'some'} | t;
+                func = {x: p&{}, m: t&true} | t;
+        `;
+
+        const actual = transform(actualCodeString, options).code;
+        const resScript = new vm.Script(actual);
+        const context = new vm.createContext({});
+        resScript.runInContext(context);
+
+        const {func} = context;
+
+        it('Should run function for pattern `{x: p&"r"}`', function () {
+            const res = func({x: 'r'});
+            assert.strictEqual(res, 1);
+        });
+
+        it('Should run function for pattern `{x: p&{}, m: t&10}`', function () {
+            const res = func({x: {}, m: 11});
+            assert.strictEqual(res, 12);
+        });
+
+        it('Should run function for pattern `{x: p&{}, m: 10}`', function () {
+            const res = func({x: {}, m: 10});
+            assert.strictEqual(res, 10);
+        });
+
+        it('Should run function for pattern `{x: p&{}, m: t&"some"}`', function () {
+            const res = func({x: {}, m: 'some'});
+            assert.strictEqual(res, 'some');
+        });
+
+        it('Should run function for pattern `{x: p&{}, m: t&true}`', function () {
+            const res = func({x: {}, m: true});
+            assert.strictEqual(res, true);
         });
     });
 });

@@ -31,7 +31,7 @@ export default template(`
   const omitParams = curry((keyArray, obj) => Object.keys(obj).filter(k => !keyArray.includes(k)).reduce((acc, k) => (acc[k] = obj[k], acc),{}));
 
   const andPredicate = (...predicates) => (...args) => predicates.every(p => p(...args));
-  const keyPredicate = (key, ...predicates) => obj => keysExists(key)(obj) && andPredicate(...predicates)(obj[key]) || false;
+  const keyPredicate = (key, ...predicates) => obj => andPredicate(...predicates)(obj[key]) || false;
 
   const isEmpty = (obj) => {
     for (let key in obj) {
