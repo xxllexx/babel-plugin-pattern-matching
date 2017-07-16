@@ -37,6 +37,7 @@ fibonacci(10); //89
 [] //empty array
 [x, y] //array with one or more elements
 [x, y, ...ys] //array with two or more elements
+[_, y, ...ys] //array with two or more elements, first one will be skiped
 all&[x, y] //array with two or more elements, resulting function will receive additional argument 'all' equal to whole array
 ([x, y, ...ys], [x]) //two arguments as array, where first length >= 2, second >= 1
 ```
@@ -69,14 +70,6 @@ let pattern = "a" | "result is a"; //for string with 'a' char
 ```js
 let pattern = n | "one argument";
     pattern = (n, m) | "two arguments"
-```
-
-#### Alias for arguments
-
-```js
-let pattern = n&4 | "parameter n eq. 4";
-    pattern = n&[p&4, ...rest] | "parameter n eq. function argument, first array value will be mapped to 'p'"
-    pattern = n&[p&4, ...rest] | "parameter n eq. function argument, first array value will be mapped to 'p'"
 ```
 
 ## Transformation
