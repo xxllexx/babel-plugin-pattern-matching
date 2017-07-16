@@ -1,5 +1,6 @@
 import matchHelper from "./match-helper";
 
+const $$_SKIP = '_';
 const $$_isNaN = '_isNaN';
 const $$isNull = 'isNull';
 const $$isValue = 'isValue';
@@ -167,7 +168,11 @@ let getTypeParams = {
     ArrayExpression: (block, t, nested) => block.elements.length
         ? t.arrayExpression(
         block.elements.map((a, i) => {
-            return (a != null) ? t.isSpreadElement(a) ? t.stringLiteral($$getRestParams) : t.numericLiteral(i) : false
+            return (a != null) ?
+                t.isSpreadElement(a) ?
+                    t.stringLiteral($$getRestParams) :
+                        t.isIdentifier(a) && a.name !== $$_SKIP ? t.numericLiteral(i) : false
+                : false
         }).filter(a=> !!a)
     ) : false,
     BinaryExpression: (block, t) => {
@@ -215,7 +220,7 @@ function getFunctionsCall(left, right, t) {
 
     if (!left.name || left.name !== 'NaN' && left.name !== 'undefined') {
         params = args.filter(a => !!a).reduce((acc, n) => {
-            return [...acc, ...(Array.isArray(n) ? n.filter(a => !!a && !isUndefined(a) && a.name) : n.name ? [n] : [])]
+            return [...acc, ...(Array.isArray(n) ? n.filter(a => !!a && !isUndefined(a) && a.name && a.name !== $$_SKIP) : n.name ? [n] : [])]
         }, []);
     }
 

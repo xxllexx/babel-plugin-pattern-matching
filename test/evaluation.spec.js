@@ -304,11 +304,12 @@ describe('Mixed patterns evaluation', function() {
     });
     describe('Object patterns with alias for primitive values', function() {
         const actualCodeString = `
-            let func = {x: p&'r'}   | 1;
+            let func = {x: p&'r'} | 1;
                 func = {x: p&{}, m: t&11} | t + 1;
                 func = {x: p&{}, m: t} | t;
                 func = {x: p&{}, m: t&'some'} | t;
                 func = {x: p&{}, m: t&true} | t;
+                func = t&4 | t;
         `;
 
         const actual = transform(actualCodeString, options).code;
@@ -341,6 +342,11 @@ describe('Mixed patterns evaluation', function() {
         it('Should run function for pattern `{x: p&{}, m: t&true}`', function () {
             const res = func({x: {}, m: true});
             assert.strictEqual(res, true);
+        });
+
+        it('Should run function for pattern `t&4`', function () {
+            const res = func(4);
+            assert.strictEqual(res, 4);
         });
     });
 });

@@ -71,6 +71,14 @@ let pattern = n | "one argument";
     pattern = (n, m) | "two arguments"
 ```
 
+#### Alias for arguments
+
+```js
+let pattern = n&4 | "parameter n eq. 4";
+    pattern = n&[p&4, ...rest] | "parameter n eq. function argument, first array value will be mapped to 'p'"
+    pattern = n&[p&4, ...rest] | "parameter n eq. function argument, first array value will be mapped to 'p'"
+```
+
 ## Transformation
 
 Pattern
