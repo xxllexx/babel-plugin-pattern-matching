@@ -54,6 +54,7 @@ const getTypeArguments = type => (typeArguments[type] || (() => false));
 const getTypedParams = type => (getTypeParams[type] || (() => false));
 
 const typePredicates = {
+    ArrowFunctionExpression: (block, t) => t.callExpression(t.identifier($$isValue), [block]),
     CallExpression: (block, t) => t.callExpression(t.identifier($$isValue), [block]),
     NullLiteral: (block, t) => t.callExpression(t.identifier($$isNull), []),
     StringLiteral: (block, t) => t.callExpression(t.identifier($$isValue), [block]),

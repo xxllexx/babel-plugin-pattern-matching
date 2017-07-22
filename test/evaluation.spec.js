@@ -349,4 +349,52 @@ describe('Mixed patterns evaluation', function() {
             assert.strictEqual(res, 4);
         });
     });
+
+    describe('Object patterns with scope and function values', function() {
+        const actualCodeString = `
+            let c = 10;
+            let f = () => 100
+            function d(arg) {
+                return arg + 10;
+            }
+            let func = {x: c} | 1;
+                func = {x: () => 50} | 2;
+                func = {x: f()} | 3;
+                func = {x: d(c)} | 4;
+                func = all&{x: () => c * 100, m: t} | ({...all, p: t})
+                func = all&{x: () => c * 100} | all
+        `;
+
+        const actual = transform(actualCodeString, options).code;
+        const resScript = new vm.Script(actual);
+        const context = new vm.createContext({});
+        resScript.runInContext(context);
+
+        const {func} = context;
+
+        it('Should run function for pattern `{x: c}`', function () {
+            const res = func({x: 10});
+            assert.strictEqual(res, 1);
+        });
+
+        it('Should run function for pattern `{x: () => 50}`', function () {
+            const res = func({x: 50});
+            assert.strictEqual(res, 2);
+        });
+
+        it('Should run function for pattern `{x: f()}`', function () {
+            const res = func({x: 100});
+            assert.strictEqual(res, 3);
+        });
+
+        it('Should run function for pattern `{x: d(c)}`', function () {
+            const res = func({x: 20});
+            assert.strictEqual(res, 4);
+        });
+
+        it('Should run function for pattern `all&{x: () => c * 100, m: t}`', function () {
+            const res = func({x: 1000, m: 10});
+            assert.deepEqual(res, {x: 1000, m: 10, p: 10});
+        });
+    });
 });

@@ -59,7 +59,8 @@ export default template(`
 
   const catchAll = () => () => true
   const isDefined = () => obj => (obj !== void 0)
-  const isValue = val => obj => val === obj
+  const isFunction = (fn) => fn && {}.toString.call(fn) === '[object Function]';
+  const isValue = val => obj => (isFunction(val) ? val() : val) === obj
   const isNull = () => obj => obj === null
   const isUndefined = () => obj => obj === void 0
   const _isNaN = () => (obj) => isNaN(obj) 
