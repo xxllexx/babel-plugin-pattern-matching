@@ -58,15 +58,17 @@ const typePredicates = {
     StringLiteral: (block, t) => t.callExpression(t.identifier($$isValue), [block]),
     NumericLiteral: (block, t) => t.callExpression(t.identifier($$isValue), [block]),
     BooleanLiteral: (block, t) => t.callExpression(t.identifier($$isValue), [block]),
-    Identifier(block, t) {
+    Identifier(block, t, scope) {
         if (block.name === 'undefined') {
             return t.callExpression(t.identifier($$isUndefined), [])
         } else if (block.name === 'NaN') {
             return t.callExpression(t.identifier($$_isNaN), [])
+        } else if(scope.hasBinding(block.name)){
+            return t.callExpression(t.identifier($$isValue), [block])
         }
         return t.callExpression(t.identifier($$catchAll), [])
     },
-    SequenceExpression: (block, t) => block.expressions.map(ex => getTypePredicate(ex.type)(ex, t)),
+    SequenceExpression: (block, t, scope) => block.expressions.map(ex => getTypePredicate(ex.type)(ex, t, scope)),
     ArrayExpression (block, t) {
         let name, value;
         if (block.elements.length) {
@@ -78,14 +80,14 @@ const typePredicates = {
 
         return t.callExpression(t.identifier(name), value ? [t.numericLiteral(value)] : []);
     },
-    BinaryExpression: (block, t) => (block.operator === '&') ? getTypePredicate(block.right.type)(block.right, t) : null,
-    ObjectProperty: (property, block, t) => {
-        if (!t.isIdentifier(block) || isUndefined(block)) {
+    BinaryExpression: (block, t, scope) => (block.operator === '&') ? getTypePredicate(block.right.type)(block.right, t, scope) : null,
+    ObjectProperty: (property, block, t, scope) => {
+        if (!t.isIdentifier(block) || isUndefined(block) || scope.hasBinding(block.name)) {
             return t.callExpression(
                 t.identifier($$keyPredicate),
                 [
                     t.stringLiteral(property),
-                    getTypePredicate(block.type)(block, t)
+                    getTypePredicate(block.type)(block, t, scope)
                 ]
             )
         } else {
@@ -95,7 +97,7 @@ const typePredicates = {
             )
         }
     },
-    ObjectExpression: (block, t) => {
+    ObjectExpression: (block, t, scope) => {
         if (!block.properties.length) {
             return t.callExpression(t.identifier($$isEmptyObject), []);
         } else {
@@ -114,7 +116,7 @@ const typePredicates = {
             let predicates = [keysExpr];
             for (let p of props) {
                 predicates = [
-                    getTypePredicate('ObjectProperty')(p.key.name, p.value, t),
+                    getTypePredicate('ObjectProperty')(p.key.name, p.value, t, scope),
                     ...predicates
                 ].filter(p => !!p);
             }
@@ -131,32 +133,32 @@ const typePredicates = {
 };
 
 let typeArguments = {
-    NumericLiteral: (block, t) => t.identifier(block.name),
-    BooleanLiteral: (block, t) => t.identifier(block.name),
-    StringLiteral: (block, t) => t.identifier(block.name),
-    Identifier: (block, t) => t.identifier(block.name),
-    SpreadElement: (block, t) => t.identifier(block.argument.name),
-    SequenceExpression: (block, t) => block.expressions.map(ex => getTypeArguments(ex.type)(ex, t)),
-    ArrayExpression: (block, t) => {
+    NumericLiteral: (block, t, scope) => t.identifier(block.name),
+    BooleanLiteral: (block, t, scope) => t.identifier(block.name),
+    StringLiteral: (block, t, scope) => t.identifier(block.name),
+    Identifier: (block, t, scope) => !scope.hasBinding(block.name) ? t.identifier(block.name) : null,
+    SpreadElement: (block, t, scope) => t.identifier(block.argument.name),
+    SequenceExpression: (block, t, scope) => block.expressions.map(ex => getTypeArguments(ex.type)(ex, t, scope)),
+    ArrayExpression: (block, t, scope) => {
         return block.elements.length ? block.elements.map(a => {
-            let res = getTypeArguments((a || {type: 'Skip'}).type)(a, t);
+            let res = getTypeArguments((a || {type: 'Skip'}).type)(a, t, scope);
             return Array.isArray(res) ? res[0] : res
         }) : false
     },
-    BinaryExpression: (block, t) => {
+    BinaryExpression: (block, t, scope) => {
         if (block.operator === '&') {
-            const res = getTypeArguments(block.right.type)(block.right, t);
+            const res = getTypeArguments(block.right.type)(block.right, t, scope);
             if (res) return [t.identifier(block.left.name), ...res]
         }
         return null
     },
-    ObjectProperty: (block, t) => t.isIdentifier(block.value) ? typeArguments.Identifier(block.value, t) : getTypeArguments(block.value.type)(block.value, t),
-    SpreadProperty: (block, t) => typeArguments.Identifier(block.argument, t),
-    ObjectExpression: (block, t) => block.properties.length
+    ObjectProperty: (block, t, scope) => t.isIdentifier(block.value) ? typeArguments.Identifier(block.value, t, scope) : getTypeArguments(block.value.type)(block.value, t, scope),
+    SpreadProperty: (block, t, scope) => typeArguments.Identifier(block.argument, t, scope),
+    ObjectExpression: (block, t, scope) => block.properties.length
         ? block.properties.reduce((acc, next) => {
-        const res = getTypeArguments(next.type)(next, t);
-        return [...acc, ...(Array.isArray(res) ? res : [res])]
-    }, [])
+            const res = getTypeArguments(next.type)(next, t, scope);
+            return [...acc, ...(Array.isArray(res) ? res : [res])]
+        }, [])
         : false
 };
 
@@ -164,7 +166,7 @@ let getTypeParams = {
     BooleanLiteral: (block, t, nested) =>  nested ? t.arrayExpression([]) : null,
     NumericLiteral: (block, t, nested) =>  nested ? t.arrayExpression([]) : null,
     StringLiteral: (block, t, nested) =>  nested ? t.arrayExpression([]) : null,
-    SequenceExpression: (block, t) => block.expressions.map(ex => getTypedParams(ex.type)(ex, t)),
+    SequenceExpression: (block, t, nested, scope) => block.expressions.map(ex => getTypedParams(ex.type)(ex, t, nested, scope)),
     ArrayExpression: (block, t, nested) => block.elements.length
         ? t.arrayExpression(
         block.elements.map((a, i) => {
@@ -175,20 +177,22 @@ let getTypeParams = {
                 : false
         }).filter(a=> !!a)
     ) : false,
-    BinaryExpression: (block, t) => {
+    BinaryExpression: (block, t, nested, scope) => {
         if (block.operator === '&') {
-            let res = getTypedParams(block.right.type)(block.right, t, true);
+            let res = getTypedParams(block.right.type)(block.right, t, true, scope);
             if (res.elements) res.elements = [t.stringLiteral($$getAllObject), ...res.elements];
             return res;
         }
         return null;
     },
-    ObjectProperty: (block, t) => {
+    ObjectProperty: (block, t, nested, scope) => {
         let rValue;
         if (t.isIdentifier(block.value)) {
-            rValue = !isUndefined(block.value) ? t.stringLiteral(block.key.name) : null;
+            rValue = !isUndefined(block.value)
+                && !scope.hasBinding(block.value.name)
+                    ? t.stringLiteral(block.key.name) : null;
         }	else {
-            const val = getTypedParams(block.value.type)(block.value, t, true);
+            const val = getTypedParams(block.value.type)(block.value, t, true, scope);
             rValue = val ? t.objectExpression([
                 t.objectProperty(t.identifier(block.key.name), val)
             ]) : null
@@ -196,9 +200,9 @@ let getTypeParams = {
         return rValue
     },
     SpreadProperty: (block, t) => t.stringLiteral($$getRestParams),
-    ObjectExpression: (block, t) => {
+    ObjectExpression: (block, t, nested, scope) => {
         const props = block.properties.length
-            ? block.properties.map(p => getTypedParams(p.type)(p, t, true))
+            ? block.properties.map(p => getTypedParams(p.type)(p, t, true, scope))
             : [];
 
         const filtered = props.filter(f => f != void 0);
@@ -206,10 +210,10 @@ let getTypeParams = {
     }
 };
 
-function getFunctionsCall(left, right, t) {
+function getFunctionsCall(left, right, t, scope) {
     const argName = $$args;
-    let args = getTypeArguments(left.type)(left, t);
-    let someParams = getTypedParams(left.type)(left, t);
+    let args = getTypeArguments(left.type)(left, t, scope);
+    let someParams = getTypedParams(left.type)(left, t, false, scope);
 
     if (!t.isSequenceExpression(left)) {
         someParams = [someParams];
@@ -249,13 +253,13 @@ function getFunctionsCall(left, right, t) {
 function collectPatterns(t) {
     let patterns = {};
     return {
-        addPattern (name, binary){
+        addPattern (name, binary, scope){
             patterns[name] = patterns[name] || [];
-            const predicates = getTypePredicate(binary.left.type)(binary.left, t);
+            const predicates = getTypePredicate(binary.left.type)(binary.left, t, scope);
             if (predicates) {
                 patterns[name].push(t.arrayExpression([
                     ...(Array.isArray(predicates) ? predicates : [predicates]).filter(f => !!f),
-                    getFunctionsCall(binary.left, binary.right, t)
+                    getFunctionsCall(binary.left, binary.right, t, scope)
                 ]))
             }
         },
@@ -300,7 +304,7 @@ export default function (babel) {
                     let lookUp = true;
                     const nodes = [];
 
-                    this.patterns.addPattern(name, declaration.get('init').node);
+                    this.patterns.addPattern(name, declaration.get('init').node, path.scope);
 
                     do {
                         let sib = path.getSibling(++key);
@@ -310,7 +314,7 @@ export default function (babel) {
                             && expression.node.left.name === name
                             && analyzeBinary(expression.node.right, t)
                         ) {
-                            this.patterns.addPattern(name, expression.node.right);
+                            this.patterns.addPattern(name, expression.node.right, path.scope);
                             nodes.push(sib);
                         } else {
                             lookUp = false;

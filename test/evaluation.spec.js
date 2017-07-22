@@ -5,7 +5,7 @@ import { transform } from 'babel-core';
 import vm from 'vm';
 
 const options = {
-    'plugins': [plugin, "transform-object-rest-spread"],
+    'plugins': [[plugin], "transform-object-rest-spread"],
     'presets': ['es2015']
 };
 
@@ -329,7 +329,7 @@ describe('Mixed patterns evaluation', function() {
             assert.strictEqual(res, 12);
         });
 
-        it('Should run function for pattern `{x: p&{}, m: 10}`', function () {
+        it('Should run function for pattern `{x: p&{}, m: t}`', function () {
             const res = func({x: {}, m: 10});
             assert.strictEqual(res, 10);
         });
