@@ -87,7 +87,7 @@ export default template(`
                 ? omitParams(params, arg
                   ) : false
               )
-          ].filter(a => !!a)
+          ].filter(a => a != void 0)
         }
       } else {
         let m = Object.keys(key).reduce((acc, k) => {
@@ -103,12 +103,16 @@ export default template(`
     }, [])  
   } 
 
-  const getArgs = (...getters) => (...args) => (getters.length)
-      ? getters.reduce((acc, g, ind) => {
-        return g.length && (args[ind] !== void 0) ? [
-            ...acc, 
-            ...getLevelArgs(g, args[ind])
-          ] : acc;
-      }, [])
-      : args;
+  const getArgs = (...getters) => (...args) => {
+        return args.reduce((acc, nextArg, argIndex) => {
+            if (getters[argIndex] && getters[argIndex].length){
+                return [
+                    ...acc,
+                    ...getLevelArgs(getters[argIndex], nextArg)
+                ]		
+            } else {
+                return [...acc, nextArg]
+            }
+        }, [])
+    }
 `);
