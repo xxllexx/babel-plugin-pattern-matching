@@ -397,4 +397,30 @@ describe('Mixed patterns evaluation', function() {
             assert.deepEqual(res, {x: 1000, m: 10, p: 10});
         });
     });
+
+    describe('Seq patterns', function() {
+        const actualCodeString = `
+            let func = ([x, ...rest], []) | [x, ...rest]
+                func = ([], [x, y, ...zs]) | [x, y, ...zs]
+        `;
+
+        const actual = transform(actualCodeString, options).code;
+        const resScript = new vm.Script(actual);
+        const context = new vm.createContext({});
+        resScript.runInContext(context);
+
+        const {func} = context;
+
+        it('Should run function for pattern `([x, ...rest], [])`', function () {
+            const res = func([1,2], []);
+            assert.deepEqual(res, [1, 2]);
+        });
+
+        it('Should run function for pattern `([], [x, y, ...zs])`', function () {
+            const res = func([], [1,2,3]);
+            assert.deepEqual(res, [1,2,3]);
+        });
+    });
+
+
 });

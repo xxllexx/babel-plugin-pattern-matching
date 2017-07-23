@@ -17,13 +17,13 @@ var func = match([isValue("a"), function (args0) {
 }], [isNull(), function (args0) {
     return function () {
         return "result is null";
-    }.apply(undefined, _toConsumableArray(getArgs()(args0)));
+    }.apply(undefined, _toConsumableArray(getArgs()()));
 }], [isUndefined(), function (args0) {
     return function () {
         return "result is undefined";
-    }.apply(undefined, _toConsumableArray(getArgs()(args0)));
+    }.apply(undefined, _toConsumableArray(getArgs()()));
 }], [_isNaN(), function (args0) {
     return function () {
         return "result is NaN";
-    }.apply(undefined, _toConsumableArray(getArgs()(args0)));
+    }.apply(undefined, _toConsumableArray(getArgs()()));
 }]);

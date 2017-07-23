@@ -231,6 +231,8 @@ function getFunctionsCall(left, right, t, scope) {
     }
 
     const argsToPut = args.reduce((acc, next, index) => [...acc, argName + index], []).map(a => t.identifier(a));
+    const argsToExec = args.reduce((acc, next, index) => next ? [...acc, argName + index] : acc, []).map(a => t.identifier(a));
+
     const body = t.arrowFunctionExpression(
         params,
         right
@@ -245,7 +247,7 @@ function getFunctionsCall(left, right, t, scope) {
                         t.identifier($$getArgs),
                         someParams.filter(s => !!s)
                     ),
-                    argsToPut
+                    argsToExec
                 )
             )
         ])
