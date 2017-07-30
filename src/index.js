@@ -225,7 +225,7 @@ function getFunctionsCall(left, right, t, scope) {
     let params = [];
 
     if (!left.name || left.name !== 'NaN' && left.name !== 'undefined') {
-        params = args.filter(a => !!a).reduce((acc, n) => {
+        params = args.filter(a => !!a && a.name !== $$_SKIP).reduce((acc, n) => {
             return [...acc, ...(Array.isArray(n) ? n.filter(a => !!a && !isUndefined(a) && a.name && a.name !== $$_SKIP) : n.name ? [n] : [])]
         }, []);
     }
