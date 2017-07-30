@@ -50,7 +50,7 @@ describe('Patterns for Primitive values', function() {
     it(`should transform primitives`, () => {
         const expected = fs.readFileSync(expectedPath, 'utf8');
         const actual = transformFileSync(actualPath, options).code;
-
+        
         assert.strictEqual(_.trim(actual), _.trim(expected));
     });
 });
@@ -62,7 +62,7 @@ describe('Patterns for Mixed values', function() {
     it(`should transform mixed patterns`, () => {
         const expected = fs.readFileSync(expectedPath, 'utf8');
         const actual = transformFileSync(actualPath, options).code;
-
+        
         assert.strictEqual(_.trim(actual), _.trim(expected));
     });
 });

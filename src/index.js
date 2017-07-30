@@ -329,13 +329,25 @@ export default function (babel) {
                         t.variableDeclaration('let', [
                             t.variableDeclarator(
                                 t.identifier(name),
-                                t.callExpression(
-                                    t.identifier($$match),
-                                    this.patterns.getPattern(name)
-                                )
+                                t.functionExpression(
+                                 t.identifier('_' + name), 
+                                 [t.restElement(t.identifier('prop'))],
+                                 t.blockStatement([
+                                 	t.returnStatement(
+                                    	t.callExpression(
+                                         t.callExpression(
+                                           t.identifier($$match),
+                                           this.patterns.getPattern(name)
+                                         ),
+                                         [t.spreadElement(t.identifier('prop'))]
+                                       )
+                                    )
+                                 ])
+                               )
                             )
                         ])
                     ]);
+
                     this.patterns.reset(name);
                     nodes.forEach(ch => ch.remove())
                 }
