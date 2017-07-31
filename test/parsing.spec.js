@@ -23,7 +23,7 @@ describe('Patterns for Array', function() {
         it(`should transform arrays: ${ getTestName(testPath) }`, () => {
             const expected = fs.readFileSync(expectedPath, 'utf8');
             const actual = transformFileSync(actualPath, options).code;
-
+            
             assert.strictEqual(_.trim(actual), _.trim(expected));
         });
     });
@@ -37,7 +37,7 @@ describe('Patterns for Object', function() {
         it(`should transform objects: ${ getTestName(testPath) }`, () => {
             const expected = fs.readFileSync(expectedPath, 'utf8');
             const actual = transformFileSync(actualPath, options).code;
-
+            
             assert.strictEqual(_.trim(actual), _.trim(expected));
         });
     });

@@ -231,7 +231,12 @@ function getFunctionsCall(left, right, t, scope) {
     }
 
     const argsToPut = args.reduce((acc, next, index) => [...acc, argName + index], []).map(a => t.identifier(a));
-    const argsToExec = args.reduce((acc, next, index) => next ? [...acc, argName + index] : acc, []).map(a => t.identifier(a));
+    const argsToExec = args.reduce(
+        (acc, next, index) => 
+            next && next.name !== $$_SKIP 
+                ? [...acc, argName + index] 
+                : acc,
+            []).map(a => t.identifier(a));
 
     const body = t.arrowFunctionExpression(
         params,
@@ -325,25 +330,14 @@ export default function (babel) {
                         }
                     } while (lookUp);
 
-                    path.replaceWithMultiple([
+                     path.replaceWithMultiple([
                         t.variableDeclaration('let', [
                             t.variableDeclarator(
                                 t.identifier(name),
-                                t.functionExpression(
-                                 t.identifier('_' + name), 
-                                 [t.restElement(t.identifier('prop'))],
-                                 t.blockStatement([
-                                 	t.returnStatement(
-                                    	t.callExpression(
-                                         t.callExpression(
-                                           t.identifier($$match),
-                                           this.patterns.getPattern(name)
-                                         ),
-                                         [t.spreadElement(t.identifier('prop'))]
-                                       )
-                                    )
-                                 ])
-                               )
+                                t.callExpression(
+                                  t.identifier($$match),
+                                  this.patterns.getPattern(name)
+                                )
                             )
                         ])
                     ]);
